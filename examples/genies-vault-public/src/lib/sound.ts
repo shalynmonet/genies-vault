@@ -50,7 +50,7 @@ function tone(
   osc.stop(t0 + duration + 0.02);
 }
 
-function noiseThud(start = 0, duration = 0.22, gain = 0.09) {
+function noiseThud(start = 0, duration = 0.22, gain = 0.09, cutoff = 500) {
   const audio = getCtx();
   if (!audio) return;
   const t0 = audio.currentTime + start;
@@ -62,7 +62,7 @@ function noiseThud(start = 0, duration = 0.22, gain = 0.09) {
   src.buffer = buffer;
   const filter = audio.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(500, t0);
+  filter.frequency.setValueAtTime(cutoff, t0);
   const env = audio.createGain();
   env.gain.setValueAtTime(gain, t0);
   env.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
@@ -76,34 +76,91 @@ export const sfx = {
   click() {
     tone(320, { duration: 0.05, type: 'square', gain: 0.03 });
   },
-  // Bright ascending chime for a safe reveal -- pitch rises slightly with
-  // how many safe cells are already open, so a long streak feels like it's
-  // building.
+  // A little money-bag jingle for a safe reveal -- a handful of quick,
+  // slightly-detuned, randomly-timed metallic clinks (like coins knocking
+  // together) over a warm low body tone, instead of one clean chime. Pitch
+  // rises slightly with how many safe cells are already open, so a long
+  // streak feels like it's building.
   safeReveal(streak: number) {
-    const base = 520 + Math.min(streak, 10) * 18;
-    tone(base, { duration: 0.16, type: 'triangle', gain: 0.07, sweep: base * 1.5 });
-    tone(base * 1.5, { start: 0.05, duration: 0.14, type: 'sine', gain: 0.05 });
+    const base = 480 + Math.min(streak, 10) * 16;
+    const clinks = 5;
+    for (let i = 0; i < clinks; i++) {
+      const jitter = (Math.random() - 0.5) * 90;
+      const pitch = base * (1.7 + i * 0.4) + jitter;
+      tone(pitch, {
+        start: i * 0.038 + Math.random() * 0.02,
+        duration: 0.1 + Math.random() * 0.06,
+        type: i % 2 === 0 ? 'triangle' : 'sine',
+        gain: 0.06 - i * 0.006,
+      });
+    }
+    // Warm body underneath the clinks so it still reads as "safe", not just
+    // percussive jingling.
+    tone(base, { duration: 0.2, type: 'triangle', gain: 0.055, sweep: base * 1.25 });
   },
-  // Low dissonant thud + noise burst for hitting a curse.
+  // A drawn-out doom hit for a curse: a heavy sub-bass boom, a sour,
+  // slowly-sagging drone underneath that lingers well after the impact, and
+  // a sharp crack on top so it still registers instantly -- more "bomb going
+  // off" than a simple buzzer, matching the vault ashing out on screen.
   cursed() {
-    tone(160, { duration: 0.3, type: 'sawtooth', gain: 0.05, sweep: 60 });
-    noiseThud(0, 0.25, 0.1);
+    // Sharp initial crack, so the hit still feels instant.
+    tone(220, { duration: 0.12, type: 'square', gain: 0.045, sweep: 70 });
+    // The boom: a heavy, low-passed noise impact, plus a longer, quieter
+    // rumbling tail that trails off well after everything else has ended.
+    noiseThud(0, 0.9, 0.2, 180);
+    noiseThud(0.05, 1.3, 0.06, 240);
+    // Two dissonant, descending low tones (a sour near-interval, not a
+    // clean octave) that sag downward and hang -- the "doom" of it.
+    tone(116, { start: 0.02, duration: 1.5, type: 'sawtooth', gain: 0.08, sweep: 34 });
+    tone(82, { start: 0.05, duration: 1.7, type: 'sawtooth', gain: 0.065, sweep: 24 });
   },
-  // A mystical descending-then-rising whoosh for consulting the Genie.
+  // A loud gong strike for consulting the Genie: a sharp mallet transient
+  // plus a cluster of inharmonic overtones (the classic metallic "clang" of
+  // a struck gong) ringing out together and decaying at slightly different
+  // rates, instead of a quiet mystical whoosh.
   consult() {
-    tone(700, { duration: 0.22, type: 'sine', gain: 0.05, sweep: 260 });
-    tone(260, { start: 0.18, duration: 0.22, type: 'sine', gain: 0.05, sweep: 620 });
-  },
-  // Triumphant short arpeggio for cashing out.
-  cashout() {
-    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
-      tone(f, { start: i * 0.07, duration: 0.22, type: 'triangle', gain: 0.07 }),
+    const fundamental = 190;
+    noiseThud(0, 0.14, 0.17, 2400); // bright mallet-strike transient
+    [1, 1.4, 2.27, 3.76, 5.4].forEach((ratio, i) =>
+      tone(fundamental * ratio, {
+        start: 0.006,
+        duration: 1.15 - i * 0.13,
+        type: i === 0 ? 'sine' : 'triangle',
+        gain: 0.1 - i * 0.015,
+      }),
     );
   },
-  // A gentle two-note "sealed the vault" fanfare for a full-clear jackpot.
+  // A "cha-ching" cash-out: a bright bell ring, then a real cascade of
+  // coins spilling out -- more numerous and longer than the single
+  // safe-reveal jingle, since cashing out is the bigger payoff moment --
+  // resolving into a warm low confirmation tone.
+  cashout() {
+    tone(1046.5, { duration: 0.22, type: 'square', gain: 0.05 });
+    tone(1567.98, { start: 0.05, duration: 0.3, type: 'triangle', gain: 0.06 });
+    const coins = 14;
+    for (let i = 0; i < coins; i++) {
+      const jitter = (Math.random() - 0.5) * 140;
+      const pitch = 900 + Math.random() * 900 + jitter;
+      tone(pitch, {
+        start: 0.1 + i * 0.028 + Math.random() * 0.02,
+        duration: 0.09 + Math.random() * 0.07,
+        type: i % 2 === 0 ? 'triangle' : 'sine',
+        gain: 0.05 - Math.min(i, 10) * 0.003,
+      });
+    }
+    tone(261.63, { start: 0.28, duration: 0.35, type: 'triangle', gain: 0.06 });
+  },
+  // A full-clear jackpot fanfare: a bass anchor + thud to give it weight,
+  // a rising six-note run, then a bright sparkle layer on top -- matching
+  // the coin-burst visual, this is the biggest sound in the game.
   sealed() {
-    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) =>
-      tone(f, { start: i * 0.09, duration: 0.3, type: 'triangle', gain: 0.075 }),
+    tone(80, { duration: 0.5, type: 'sine', gain: 0.09, sweep: 50 });
+    noiseThud(0, 0.35, 0.07);
+    [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568.0].forEach((f, i) =>
+      tone(f, { start: 0.05 + i * 0.085, duration: 0.32, type: 'triangle', gain: 0.08 }),
+    );
+    [2093.0, 2349.3, 2637.0].forEach((f, i) =>
+      tone(f, { start: 0.35 + i * 0.06, duration: 0.5, type: 'sine', gain: 0.035 }),
     );
   },
 };
