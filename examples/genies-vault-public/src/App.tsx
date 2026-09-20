@@ -86,6 +86,17 @@ export default function App() {
   // live-mode-only state
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const pendingIndexRef = useRef<number | null>(null);
+  // Synchronous guard for demo mode: `busy` (React state) only takes effect
+  // on the next render, so two clicks fired within the same tick (a fast
+  // real double-click, or two different caskets clicked back-to-back before
+  // React re-renders) can both slip past the `busy` check and both schedule
+  // a reveal. Each one's own `index` is safely closed over, so the payout
+  // math was never wrong -- but both calls used to resolve their casket via
+  // the single shared `pendingIndexRef`, so the second call's write clobbered
+  // the first, leaving one clicked casket stuck visually "hidden" forever
+  // even after the round (correctly) settled around it. A ref updates
+  // synchronously, so checking it here closes the window outright.
+  const demoBusyRef = useRef(false);
 
   const decimals = mode === 'live' ? snapshot?.token.decimals ?? 18 : 18;
   const fmt = (amount: bigint) => Number(formatUnits(amount, decimals)).toFixed(2);
@@ -219,15 +230,17 @@ export default function App() {
   }
 
   function demoReveal(index: number) {
-    if (!vault || busy || !canReveal(vault)) return;
+    if (!vault || busy || demoBusyRef.current || !canReveal(vault)) return;
+    demoBusyRef.current = true;
     setBusy(true);
-    pendingIndexRef.current = index;
     // Simulate the same VRF-fulfillment latency a real chain round would have.
     setTimeout(() => {
       const draw = demoUnbiasedDraw(vault.cellsRemaining);
       const cursed = draw < vault.cursesRemaining;
       if (cursed) {
-        resolveSlot(pendingIndexRef.current, 'cursed');
+        // Resolve the casket this specific call was for -- `index` is
+        // closed over per-call, so it can't be clobbered by another click.
+        resolveSlot(index, 'cursed');
         appendLog('A cursed casket! The vault seals shut. Payout: 0.');
         setOutcome('busted');
         setScreen('ended');
@@ -235,7 +248,7 @@ export default function App() {
       } else {
         const next = applySafeReveal(vault);
         setVault(next);
-        resolveSlot(pendingIndexRef.current, 'safe');
+        resolveSlot(index, 'safe');
         appendLog(`Safe! Multiplier now ${formatMultiplier(next.multiplierWad)}.`);
         sfx.safeReveal(next.revealsMade);
         if (isSealed(next)) {
@@ -247,16 +260,18 @@ export default function App() {
           setTimeout(() => sfx.sealed(), 150);
         }
       }
+      demoBusyRef.current = false;
       setBusy(false);
     }, 550);
   }
 
   function demoConsult() {
-    if (!vault || busy || !canConsult(vault)) return;
+    if (!vault || busy || demoBusyRef.current || !canConsult(vault)) return;
     if (demoBalance < demoWager) {
       appendLog("You don't have enough GOLD left to pay the Genie.");
       return;
     }
+    demoBusyRef.current = true;
     setBusy(true);
     setTimeout(() => {
       setDemoBalance(b => b - demoWager);
@@ -265,6 +280,7 @@ export default function App() {
       resolveSlot(null, 'genie');
       appendLog('The Genie defuses one curse for you, at the cost of another wager staked.');
       sfx.consult();
+      demoBusyRef.current = false;
       setBusy(false);
     }, 350);
   }
@@ -502,6 +518,18 @@ export default function App() {
                 </div>
               </div>
 
+              <div className={`hud-stat${vault.consultsUsed > 0 ? ' hud-stat--risk' : ''}`}>
+                <div className="hud-stat-label">Total Wagered</div>
+                <div className="hud-stat-value">
+                  {fmt(wagerAmount * (1n + BigInt(vault.consultsUsed)))} <span className="hud-unit">GOLD</span>
+                </div>
+                {vault.consultsUsed > 0 && (
+                  <div className="hud-stat-note">
+                    {fmt(wagerAmount)} base + {vault.consultsUsed} whisper{vault.consultsUsed === 1 ? '' : 's'} at {fmt(wagerAmount)} each
+                  </div>
+                )}
+              </div>
+
               <div className="hud-stat hud-stat--glow">
                 <div className="hud-stat-label">Multiplier</div>
                 <div className="hud-stat-value">{formatMultiplier(vault.multiplierWad)}</div>
@@ -534,7 +562,8 @@ export default function App() {
                     disabled={busy || !canConsult(vault)}
                     onClick={() => (mode === 'demo' ? demoConsult() : liveSubmit(ACTION_CONSULT, null))}
                   >
-                    Whisper to the Genie
+                    <span className="btn-label">Whisper to the Genie</span>
+                    <span className="btn-subcost">+{fmt(wagerAmount)} GOLD</span>
                   </button>
                   <button
                     className="btn danger ornate"

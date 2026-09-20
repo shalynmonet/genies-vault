@@ -280,6 +280,19 @@ body {
   background: linear-gradient(180deg, var(--gold-300), var(--gold-700));
   box-shadow: 0 2px 0 #6a4a12, 0 6px 14px rgba(0, 0, 0, 0.35);
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Shows a button's real-money cost right where the decision is made, so a
+   player never has to read the rules to know whispering isn't free. */
+.btn-subcost {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
 }
 
 .btn:disabled {
@@ -395,6 +408,24 @@ body {
 .hud-stat--glow {
   border-color: var(--gold-300);
   box-shadow: 0 0 12px rgba(217, 176, 76, 0.45) inset, 0 0 10px rgba(217, 176, 76, 0.3);
+}
+
+/* Flags that the player has committed more than their original wager (via
+   one or more whispers) -- a quiet color cue so the growing total is
+   noticeable at a glance, without needing to read the rules first. */
+.hud-stat--risk {
+  border-color: var(--crimson-600);
+}
+
+.hud-stat--risk .hud-stat-value {
+  color: #e8837e;
+}
+
+.hud-stat-note {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  opacity: 0.65;
+  margin-top: 3px;
 }
 
 .hud-stat-label {
