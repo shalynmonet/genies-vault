@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gameId": "GeniesVaultGame",
+  "apiVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "name": "Genie's Vault",
+      "description": "Open gold-gilded caskets in a houndstooth-tessellated vault to grow your multiplier, or pay the Genie to defuse a curse and buy safety. Cash out any time."
+    }
+  },
+  "presentation": {
+    "mode": "full-iframe",
+    "hostPanels": {
+      "openSession": false,
+      "history": false,
+      "status": false
+    }
+  },
+  "capabilities": {
+    "openSession": true,
+    "submitAction": true,
+    "forfeitExpiredSession": true,
+    "cancelStuckRandomness": true,
+    "resize": true
+  }
+}

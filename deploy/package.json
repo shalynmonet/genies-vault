@@ -1,0 +1,16 @@
+{
+  "name": "genies-vault-deploy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:base-sepolia": "node --env-file=.env node_modules/hardhat/dist/src/cli.js run scripts/deploy.ts --network baseSepolia",
+    "deploy:base": "node --env-file=.env node_modules/hardhat/dist/src/cli.js run scripts/deploy.ts --network base"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^3.12.0",
+    "viem": "^2.52.2"
+  }
+}

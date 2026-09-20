@@ -1,0 +1,539 @@
+:root {
+  --burgundy-950: #2a0a12;
+  --burgundy-900: #3d0f1c;
+  --burgundy-800: #5b1626;
+  --burgundy-700: #7a1f33;
+  --gold-100: #f8ecc9;
+  --gold-300: #f0d98c;
+  --gold-500: #d9b04c;
+  --gold-700: #a9791f;
+  --cream: #f2e2b6;
+  --curse-ink: #1a0a0e;
+  --safe-glow: #7fe0b0;
+  --navy-950: #080d16;
+  --navy-900: #101a2b;
+  --navy-800: #182740;
+  --navy-700: #223357;
+  --crimson-600: #c23b3b;
+  --crimson-800: #5c1010;
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-accent: 'Playfair Display', Georgia, serif;
+  --font-ui: 'Montserrat', system-ui, sans-serif;
+  --font-body: var(--font-ui);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--gold-100);
+  background-color: var(--burgundy-950);
+  /* Layered so the palace scene always shows in full on the top and bottom
+     edges, no matter how tall the panel below it renders (fonts/viewport/
+     zoom can all change that height) — each art strip is anchored to its
+     own edge of the page instead of one big "cover" photo that would crop
+     unpredictably. The velvet tile fills whatever space is left behind the
+     panel itself (never visible — it's just a safety fallback).
+     The LEFT/RIGHT side art is not painted here — see .app::before/::after
+     below, which use real flex-box space + background-size:cover so they
+     always fully cover the margin with zero velvet showing through, no
+     matter how wide that margin ends up being at a given viewport size. */
+  background-image:
+    linear-gradient(180deg, rgba(10, 4, 6, 0.32), rgba(10, 4, 6, 0.55)),
+    url('/assets/palace-top.jpg'),
+    url('/assets/palace-bottom.jpg'),
+    url('/assets/velvet-texture.jpg');
+  background-position:
+    center top,
+    center top,
+    center bottom,
+    center top;
+  background-size:
+    cover,
+    100% auto,
+    100% auto,
+    280px 280px;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat;
+}
+
+.houndstooth-strip {
+  background-color: var(--gold-500);
+  background-image:
+    linear-gradient(45deg, var(--burgundy-900) 25%, transparent 25%, transparent 75%, var(--burgundy-900) 75%, var(--burgundy-900)),
+    linear-gradient(45deg, var(--burgundy-900) 25%, transparent 25%, transparent 75%, var(--burgundy-900) 75%, var(--burgundy-900)),
+    linear-gradient(-45deg, var(--burgundy-900) 25%, transparent 25%, transparent 75%, var(--burgundy-900) 75%, var(--burgundy-900)),
+    linear-gradient(-45deg, var(--burgundy-900) 25%, transparent 25%, transparent 75%, var(--burgundy-900) 75%, var(--burgundy-900));
+  background-position: 0 0, 4px 4px, 0 4px, 4px 0;
+  background-size: 8px 8px;
+}
+
+.app {
+  min-height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 20px 0 32px;
+}
+
+/* The two "wings" flanking the vault panel. These are real flex-box
+   items (not a background formula guessing at a width) so they always
+   claim exactly whatever space is left beside the panel and — because
+   they're sized with background-size:cover — always paint art all the
+   way to their own edges. That's what guarantees no sliver of the plain
+   velvet tile can ever show between the panel and the palace scene. */
+.app::before,
+.app::after {
+  content: '';
+  flex: 1 1 0;
+  min-width: 20px;
+  background-image:
+    linear-gradient(180deg, rgba(10, 4, 6, 0.32), rgba(10, 4, 6, 0.55)),
+    url('/assets/palace-left.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.app::after {
+  background-image:
+    linear-gradient(180deg, rgba(10, 4, 6, 0.32), rgba(10, 4, 6, 0.55)),
+    url('/assets/palace-right.jpg');
+}
+
+.vault-shell {
+  flex: 1 1 900px;
+  /* Opt out of the parent's align-items:stretch (that's only meant for the
+     side wings, which have no content of their own and must fill the full
+     height). The panel should always size to its own content — never get
+     pulled taller/shorter to match the viewport, which would distort its
+     proportions. */
+  align-self: center;
+  min-width: 300px;
+  max-width: 900px;
+  background: linear-gradient(180deg, rgba(61, 15, 28, 0.4), rgba(42, 10, 18, 0.62)), url('/assets/velvet-texture.jpg');
+  background-repeat: repeat;
+  background-size: 280px 280px;
+  border: 3px solid var(--gold-500);
+  border-radius: 18px;
+  box-shadow: 0 0 0 6px var(--burgundy-950), 0 20px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.setup-panel {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.vault-header {
+  padding: 16px 20px 10px;
+  text-align: center;
+  border-bottom: 2px solid var(--gold-700);
+}
+
+.vault-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  font-size: clamp(24px, 4vw, 32px);
+  margin: 0;
+  color: var(--gold-300);
+  background: linear-gradient(180deg, #fff8e2 0%, var(--gold-300) 32%, var(--gold-500) 58%, var(--gold-700) 82%, var(--gold-300) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.12));
+}
+
+.vault-subtitle {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 500;
+  margin: 6px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--gold-100);
+  opacity: 0.8;
+}
+
+.panel {
+  padding: 16px 20px;
+}
+
+.helper-text {
+  font-family: var(--font-ui);
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--gold-100);
+  opacity: 0.75;
+}
+
+.helper-text-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  opacity: 1;
+}
+
+.difficulty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.difficulty-card {
+  border: 2px solid var(--gold-700);
+  background: linear-gradient(180deg, rgba(91, 22, 38, 0.5), rgba(91, 22, 38, 0.7)), url('/assets/velvet-texture.jpg');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--gold-100);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.difficulty-card:hover {
+  transform: translateY(-2px);
+}
+
+.difficulty-card.selected {
+  border-color: var(--gold-300);
+  background: linear-gradient(180deg, rgba(122, 31, 51, 0.55), rgba(122, 31, 51, 0.75)), url('/assets/velvet-texture.jpg');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  box-shadow: 0 0 0 2px var(--gold-500) inset;
+}
+
+.difficulty-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.difficulty-tagline {
+  font-size: 10.5px;
+  opacity: 0.8;
+  line-height: 1.3;
+}
+
+.wager-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 14px 0;
+}
+
+.wager-row label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.wager-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--gold-700);
+  background: linear-gradient(180deg, rgba(42, 10, 18, 0.88), rgba(42, 10, 18, 0.92)), url('/assets/velvet-texture.jpg');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  color: var(--gold-100);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+}
+
+.btn {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--curse-ink);
+  background: linear-gradient(180deg, var(--gold-300), var(--gold-700));
+  box-shadow: 0 2px 0 #6a4a12, 0 6px 14px rgba(0, 0, 0, 0.35);
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.secondary {
+  background: linear-gradient(180deg, rgba(122, 31, 51, 0.6), rgba(61, 15, 28, 0.8)), url('/assets/velvet-texture.jpg');
+  background-repeat: repeat;
+  background-size: 120px 120px;
+  color: var(--gold-100);
+  box-shadow: 0 2px 0 #1c0409, 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.btn.danger {
+  background: linear-gradient(180deg, #e0b357, #a9791f);
+}
+
+.vault-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  align-items: flex-start;
+}
+
+.board-column {
+  flex: 1 1 360px;
+  min-width: 280px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.casket {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 2px solid var(--gold-700);
+  background-image: url('/assets/casket-closed.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #6a4a12, 0 6px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.casket:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 5px 0 #6a4a12, 0 10px 18px rgba(0, 0, 0, 0.5);
+}
+
+.casket:disabled {
+  cursor: default;
+}
+
+.casket.safe {
+  background-image: url('/assets/casket-safe.jpg');
+  border-color: #3f9c72;
+  box-shadow: 0 0 12px rgba(127, 224, 176, 0.55), 0 3px 0 #2c6e4e;
+}
+
+.casket.cursed {
+  background-image: url('/assets/casket-curse.jpg');
+  border-color: #7a1f33;
+  box-shadow: 0 0 12px rgba(217, 117, 111, 0.5), 0 3px 0 #4a1018;
+}
+
+.casket.genie {
+  background-image: url('/assets/genie-ward.jpg');
+  border-color: #6a4a9c;
+  box-shadow: 0 0 12px rgba(154, 123, 199, 0.5), 0 3px 0 #4a3470;
+}
+
+.hud-panel {
+  flex: 0 1 260px;
+  min-width: 220px;
+  background: linear-gradient(180deg, var(--navy-900), var(--navy-950));
+  border: 2px solid var(--gold-500);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 0 0 4px var(--burgundy-950) inset, 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.hud-panel-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--gold-300);
+  border-bottom: 1px solid var(--gold-700);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.hud-stat {
+  background: var(--navy-800);
+  border: 1px solid var(--gold-700);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.hud-stat--glow {
+  border-color: var(--gold-300);
+  box-shadow: 0 0 12px rgba(217, 176, 76, 0.45) inset, 0 0 10px rgba(217, 176, 76, 0.3);
+}
+
+.hud-stat-label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  opacity: 0.75;
+}
+
+.hud-stat-value {
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-300);
+  margin-top: 2px;
+}
+
+.hud-stat-value.small {
+  font-size: 14px;
+}
+
+.hud-unit {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.hud-stat-row {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-stat-row .hud-stat.small {
+  flex: 1;
+  padding: 6px;
+  margin-bottom: 0;
+}
+
+.hud-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn.danger.ornate {
+  background: linear-gradient(180deg, var(--crimson-600), var(--crimson-800));
+  color: var(--gold-100);
+  border: 1px solid var(--gold-500);
+  box-shadow: 0 2px 0 #3a0a0a, 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+.log {
+  padding: 10px 4px 0;
+  font-size: 11.5px;
+  opacity: 0.75;
+  max-height: 70px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 16px 14px 28px;
+  }
+
+  .app::before,
+  .app::after {
+    display: none;
+  }
+
+  .vault-shell {
+    flex: 1 1 auto;
+    max-width: 480px;
+    min-width: 0;
+  }
+
+  .vault-body {
+    flex-direction: column;
+  }
+
+  .board-column,
+  .hud-panel {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .board {
+    gap: 6px;
+  }
+}
+
+.mode-badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-top: 6px;
+}
+
+.mode-badge.demo {
+  background: var(--gold-700);
+  color: var(--curse-ink);
+}
+
+.mode-badge.live {
+  background: var(--safe-glow);
+  color: var(--curse-ink);
+}
+
+.busted-banner,
+.sealed-banner {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 15px;
+  padding: 10px;
+  margin: 0 14px 12px;
+  border-radius: 8px;
+}
+
+.busted-banner {
+  background: rgba(217, 117, 111, 0.18);
+  color: #f2a49f;
+  border: 1px solid #7a1f33;
+}
+
+.sealed-banner {
+  background: rgba(127, 224, 176, 0.18);
+  color: var(--safe-glow);
+  border: 1px solid #3f9c72;
+}
