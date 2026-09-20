@@ -123,6 +123,7 @@ body {
   align-self: center;
   min-width: 300px;
   max-width: 900px;
+  position: relative;
   background: linear-gradient(180deg, rgba(61, 15, 28, 0.4), rgba(42, 10, 18, 0.62)), url('/assets/velvet-texture.jpg');
   background-repeat: repeat;
   background-size: 280px 280px;
@@ -130,6 +131,68 @@ body {
   border-radius: 18px;
   box-shadow: 0 0 0 6px var(--burgundy-950), 0 20px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden;
+  transition: filter 0.5s ease;
+}
+
+/* A curse landing ashes the whole panel out for a beat -- desaturated,
+   dimmed, everything under a drifting ash-fall -- before settling back to
+   normal so the next move doesn't feel punished forever. */
+.vault-shell--ashen {
+  filter: grayscale(0.85) brightness(0.55) contrast(1.1);
+}
+
+/* A full clear flashes the panel gold once, under a burst of falling coins. */
+.vault-shell--triumph {
+  animation: triumphFlash 0.9s ease-out;
+}
+@keyframes triumphFlash {
+  0% { filter: brightness(1) saturate(1); }
+  25% { filter: brightness(1.9) saturate(1.6); box-shadow: 0 0 0 6px var(--burgundy-950), 0 0 90px 10px rgba(255, 213, 110, 0.75); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+.ash-overlay,
+.confetti-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ash-flake {
+  position: absolute;
+  top: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8a8580, #35302c 70%);
+  opacity: 0;
+  animation: ashFall linear forwards;
+}
+@keyframes ashFall {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  8% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--drift), 132vh) rotate(200deg); }
+}
+
+.coin-bit {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, var(--gold-500) 55%, #8a5a10 100%);
+  box-shadow: 0 0 6px rgba(255, 213, 110, 0.8);
+  opacity: 0;
+  animation: coinBurst cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+@keyframes coinBurst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(45deg); }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--drift)), 60vh) scale(0.7) rotate(var(--rot));
+  }
 }
 
 .setup-panel {
@@ -342,6 +405,7 @@ body {
   background-position: center;
   position: relative;
   cursor: pointer;
+  overflow: hidden;
   box-shadow: 0 3px 0 #6a4a12, 0 6px 10px rgba(0, 0, 0, 0.4);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -355,22 +419,111 @@ body {
   cursor: default;
 }
 
+/* Safe reveal: the casket itself pops (like the ruby inside catching light
+   and swelling), plus a diagonal shimmer sweeps across it once. Pure CSS,
+   triggers automatically the instant the `safe` class is applied -- no JS
+   animation driver needed. */
 .casket.safe {
   background-image: url('/assets/casket-safe.jpg');
   border-color: #3f9c72;
   box-shadow: 0 0 12px rgba(127, 224, 176, 0.55), 0 3px 0 #2c6e4e;
+  animation: casketSafePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.casket.safe::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.7) 48%, transparent 64%);
+  background-size: 260% 260%;
+  background-position: -120% -120%;
+  opacity: 0;
+  animation: shimmerSweep 0.9s ease-out;
+  pointer-events: none;
+}
+
+@keyframes casketSafePop {
+  0% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  35% {
+    transform: scale(1.2);
+    filter: brightness(1.7) saturate(1.6);
+  }
+  62% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    background-position: -120% -120%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 220% 220%;
+    opacity: 0;
+  }
+}
+
+/* Cursed reveal: a sharp, dissonant shake-and-drain, settling into a
+   permanently ashen/desaturated look for that one casket -- a lasting
+   visual "tell" that lingers after the shake ends, on top of the
+   whole-board ash effect below. */
 .casket.cursed {
   background-image: url('/assets/casket-curse.jpg');
   border-color: #7a1f33;
   box-shadow: 0 0 12px rgba(217, 117, 111, 0.5), 0 3px 0 #4a1018;
+  animation: casketCursedPop 0.55s ease-out;
+  filter: brightness(0.7) saturate(0.35);
 }
 
+@keyframes casketCursedPop {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) saturate(1);
+  }
+  18% {
+    transform: scale(1.1) rotate(-3deg);
+    filter: brightness(0.5) saturate(0);
+  }
+  38% {
+    transform: scale(0.93) rotate(3deg);
+  }
+  58% {
+    transform: scale(1.03) rotate(-1.5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(0.7) saturate(0.35);
+  }
+}
+
+/* Genie ward: a slow mystical breathing glow, so the board never looks
+   fully static even between actions. */
 .casket.genie {
   background-image: url('/assets/genie-ward.jpg');
   border-color: #6a4a9c;
   box-shadow: 0 0 12px rgba(154, 123, 199, 0.5), 0 3px 0 #4a3470;
+  animation: geniePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes geniePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(154, 123, 199, 0.5), 0 3px 0 #4a3470;
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(154, 123, 199, 0.9), 0 3px 0 #4a3470;
+  }
 }
 
 .hud-panel {

@@ -79,6 +79,40 @@ export default function App() {
   const [log, setLog] = useState<string[]>([]);
   const [outcome, setOutcome] = useState<'busted' | 'sealed' | null>(null);
 
+  // Fresh randomized particle sets for the two big "moment" overlays --
+  // regenerated (via useMemo keyed on `outcome`) every time a round actually
+  // busts or seals, so a replay never looks like a static repeat of the
+  // same burst. Pure CSS-driven from here (see styles.css .ash-flake /
+  // .coin-bit): cheap, instant, no image/video assets to load.
+  const ashFlakes = useMemo(
+    () =>
+      outcome === 'busted'
+        ? Array.from({ length: 34 }, (_, i) => ({
+            id: i,
+            left: Math.random() * 100,
+            delay: Math.random() * 0.5,
+            duration: 1.6 + Math.random() * 1.4,
+            drift: (Math.random() - 0.5) * 140,
+            size: 4 + Math.random() * 7,
+          }))
+        : [],
+    [outcome],
+  );
+  const coinBits = useMemo(
+    () =>
+      outcome === 'sealed'
+        ? Array.from({ length: 40 }, (_, i) => ({
+            id: i,
+            left: 50 + (Math.random() - 0.5) * 90,
+            delay: Math.random() * 0.35,
+            duration: 1.1 + Math.random() * 0.9,
+            drift: (Math.random() - 0.5) * 320,
+            rot: Math.random() * 720 - 360,
+          }))
+        : [],
+    [outcome],
+  );
+
   // demo-mode-only state
   const [demoBalance, setDemoBalance] = useState<bigint>(DEMO_STARTING_BALANCE);
   const [demoWager, setDemoWager] = useState<bigint>(0n);
@@ -440,7 +474,50 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="vault-shell">
+      <div
+        className={`vault-shell${outcome === 'busted' ? ' vault-shell--ashen' : ''}${
+          outcome === 'sealed' ? ' vault-shell--triumph' : ''
+        }`}
+      >
+        {outcome === 'busted' && (
+          <div className="ash-overlay" aria-hidden="true">
+            {ashFlakes.map(f => (
+              <span
+                key={f.id}
+                className="ash-flake"
+                style={
+                  {
+                    left: `${f.left}%`,
+                    width: `${f.size}px`,
+                    height: `${f.size}px`,
+                    animationDelay: `${f.delay}s`,
+                    animationDuration: `${f.duration}s`,
+                    '--drift': `${f.drift}px`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
+        {outcome === 'sealed' && (
+          <div className="confetti-overlay" aria-hidden="true">
+            {coinBits.map(c => (
+              <span
+                key={c.id}
+                className="coin-bit"
+                style={
+                  {
+                    left: `${c.left}%`,
+                    animationDelay: `${c.delay}s`,
+                    animationDuration: `${c.duration}s`,
+                    '--drift': `${c.drift}px`,
+                    '--rot': `${c.rot}deg`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
         <div className="vault-header">
           <h1 className="vault-title">Genie&rsquo;s Vault</h1>
           <p className="vault-subtitle">Whispers of the Vault &mdash; open caskets, or pay the Genie to defuse a curse</p>
@@ -583,6 +660,7 @@ export default function App() {
                       setScreen('setup');
                       setVault(null);
                       setSessionKey(null);
+                      setOutcome(null);
                     }}
                   >
                     Play Again
